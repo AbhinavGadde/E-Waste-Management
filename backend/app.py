@@ -13,14 +13,19 @@ import os
 origins = [
     "http://localhost:5173",
     "http://127.0.0.1:5173",
+    "https://frontend-1zvutl72t-abhinav-gaddes-projects.vercel.app",
+    "https://frontend-abhinav-gaddes-projects.vercel.app",
 ]
 # Add Vercel domain if set
 vercel_url = os.getenv("VERCEL_URL")
 if vercel_url:
     origins.append(f"https://{vercel_url}")
-# Allow all origins in production (you can restrict this later)
-if os.getenv("ENVIRONMENT") != "production":
-    origins.append("*")
+# Add any custom frontend URL
+frontend_url = os.getenv("FRONTEND_URL")
+if frontend_url:
+    origins.append(frontend_url)
+# Allow all origins for now (restrict in production if needed)
+origins.append("*")
 
 app.add_middleware(
     CORSMiddleware,

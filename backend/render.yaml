@@ -1,0 +1,18 @@
+services:
+  - type: web
+    name: e-waste-backend
+    env: python
+    region: oregon
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn app:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: GEMINI_MODEL_NAME
+        value: gemini-1.5-flash-001
+      - key: ENVIRONMENT
+        value: production
+      - key: FRONTEND_URL
+        value: https://frontend-1zvutl72t-abhinav-gaddes-projects.vercel.app
+
