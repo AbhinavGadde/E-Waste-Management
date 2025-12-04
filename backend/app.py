@@ -8,15 +8,23 @@ from routers import auth, users, recyclers, admin, reports, ml, analytics
 
 app = FastAPI(title="E-Waste Management & Recycling Portal")
 
-# CORS: allow local dev frontends
+# CORS: allow local dev frontends and production domains
+import os
 origins = [
     "http://localhost:5173",
     "http://127.0.0.1:5173",
 ]
+# Add Vercel domain if set
+vercel_url = os.getenv("VERCEL_URL")
+if vercel_url:
+    origins.append(f"https://{vercel_url}")
+# Allow all origins in production (you can restrict this later)
+if os.getenv("ENVIRONMENT") != "production":
+    origins.append("*")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,
+    allow_origins=origins if "*" not in origins else ["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

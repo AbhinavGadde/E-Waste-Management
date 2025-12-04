@@ -1,0 +1,12 @@
+backend/
+node_modules/
+*.db
+*.sqlite
+*.log
+.env
+.env.local
+__pycache__/
+*.pyc
+.venv/
+venv/
+
