@@ -52,3 +52,9 @@ backend/uploads/*
 frontend/dist/
 frontend/build/
 
+# Vercel
+.vercel
+
+# API Keys (if stored locally)
+*.key
+secrets.txt
