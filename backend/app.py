@@ -18,6 +18,7 @@ app = FastAPI(title="E-Waste Management & Recycling Portal")
 
 # CORS: allow local dev frontends
 origins = [
+    "https://e-waste-management-sooty.vercel.app/"
     "http://localhost:5173",
     "http://127.0.0.1:5173",
 ]
