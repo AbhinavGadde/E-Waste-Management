@@ -17,46 +17,82 @@ _supported_models: List[str] | None = None
 
 
 def _get_gemini_model(model_name: str):
-    global _genai_configured, _gemini_models
-    api_key = os.getenv("GEMINI_API_KEY")
-    if not api_key:
-        raise HTTPException(status_code=500, detail="Gemini API key is not configured.")
-    if not _genai_configured:
-        genai.configure(api_key=api_key)
-        _genai_configured = True
+    global _gemini_models
+    _ensure_genai_configured()
     if model_name not in _gemini_models:
         _gemini_models[model_name] = genai.GenerativeModel(model_name)
     return _gemini_models[model_name]
+
+
+def _ensure_genai_configured():
+    """Ensure genai is configured with API key before use."""
+    global _genai_configured
+    if not _genai_configured:
+        # Always try loading from .env file first
+        from dotenv import load_dotenv
+        from pathlib import Path
+        env_path = Path(__file__).parent.parent / ".env"
+        load_dotenv(dotenv_path=env_path, override=True)
+        
+        api_key = os.getenv("GEMINI_API_KEY")
+        if not api_key:
+            raise HTTPException(
+                status_code=500, 
+                detail="Gemini API key is not configured. Please set GEMINI_API_KEY in backend/.env file or as an environment variable."
+            )
+        # Verify API key is not empty
+        api_key = api_key.strip()
+        if not api_key:
+            raise HTTPException(
+                status_code=500,
+                detail="Gemini API key is empty. Please check backend/.env file."
+            )
+        genai.configure(api_key=api_key)
+        _genai_configured = True
 
 
 def _load_supported_models() -> List[str]:
     """
     Fetch available Gemini model names once, filtering to those that support generateContent.
     Returned names are normalized (without the leading `models/` prefix).
+    If this fails, return empty list and rely on hardcoded model names.
     """
     global _supported_models
     if _supported_models is not None:
         return _supported_models
+    
+    # Initialize to empty list - will be populated if API call succeeds
+    _supported_models = []
+    
     try:
+        _ensure_genai_configured()
+        # Try to list models, but if it fails, just use hardcoded models
         raw_models = genai.list_models()
+        
+        # Process the models
+        normalized: list[str] = []
+        for model in raw_models:
+            try:
+                methods = getattr(model, "supported_generation_methods", []) or []
+                if "generateContent" not in methods:
+                    continue
+                name = getattr(model, "name", "")
+                if not name:
+                    continue
+                simple = name.split("/")[-1]
+                # Some endpoints with 'latest' suffix are not yet accessible via v1beta generateContent; skip them.
+                if simple.endswith("latest"):
+                    continue
+                normalized.append(simple)
+            except Exception:
+                # Skip this model if there's an error processing it
+                continue
+        _supported_models = normalized
     except Exception:
+        # If we can't list models at all, just return empty list
+        # The hardcoded models in _candidate_models() will be used instead
         _supported_models = []
-        return _supported_models
-
-    normalized: list[str] = []
-    for model in raw_models:
-        methods = getattr(model, "supported_generation_methods", []) or []
-        if "generateContent" not in methods:
-            continue
-        name = getattr(model, "name", "")
-        if not name:
-            continue
-        simple = name.split("/")[-1]
-        # Some endpoints with 'latest' suffix are not yet accessible via v1beta generateContent; skip them.
-        if simple.endswith("latest"):
-            continue
-        normalized.append(simple)
-    _supported_models = normalized
+    
     return _supported_models
 
 
@@ -68,7 +104,14 @@ def _candidate_models() -> List[str]:
     models.append(DEFAULT_MODEL)
     models.append("gemini-1.5-flash")
     models.append("gemini-1.5-flash-002")
-    models.extend(_load_supported_models())
+    # Try to load supported models, but don't fail if it doesn't work
+    try:
+        supported = _load_supported_models()
+        if supported:
+            models.extend(supported)
+    except Exception:
+        # If loading supported models fails, just use hardcoded ones
+        pass
     deduped: list[str] = []
     seen = set()
     for m in models:
