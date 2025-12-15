@@ -8,7 +8,7 @@ app = FastAPI(title="E-Waste Management & Recycling Portal")
 app.add_middleware(
     CORSMiddleware,
     allow_origins = [
-        "https://e-waste-management-sooty.vercel.app"
+        "https://e-waste-management-sooty.vercel.app",
         "http://localhost:5173",
     ],
     allow_credentials=True,
