@@ -1,18 +1,5 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from starlette.staticfiles import StaticFiles
-from pathlib import Path
-from dotenv import load_dotenv
-import os
-
-# Load environment variables from .env file (for local development)
-# Get the directory where this file is located
-backend_dir = Path(__file__).parent
-env_path = backend_dir / ".env"
-load_dotenv(dotenv_path=env_path)
-
-from core.db import init_db
-from routers import auth, users, recyclers, admin, reports, ml, analytics
 
 app = FastAPI(title="E-Waste Management & Recycling Portal")
 
@@ -29,6 +16,19 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+from starlette.staticfiles import StaticFiles
+from pathlib import Path
+from dotenv import load_dotenv
+import os
+
+# Load environment variables from .env file (for local development)
+# Get the directory where this file is located
+backend_dir = Path(__file__).parent
+env_path = backend_dir / ".env"
+load_dotenv(dotenv_path=env_path)
+
+from core.db import init_db
+from routers import auth, users, recyclers, admin, reports, ml, analytics
 
 @app.on_event("startup")
 def on_startup() -> None:
