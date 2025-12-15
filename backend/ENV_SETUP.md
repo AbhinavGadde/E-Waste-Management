@@ -8,7 +8,7 @@ To use the e-waste image detection feature, you need to set the `GEMINI_API_KEY`
 
 1. Create a `.env` file in the `backend` directory:
    ```
-   GEMINI_API_KEY=AIzaSyDuLJv5crUyyD3lvXTG7S3ZONXmqZ-1bLc
+   GOOGLE_API_KEY=<REPLACE_WITH_YOUR_ACTUAL_KEY>
    ```
 
 2. Install dependencies (python-dotenv is already included in requirements.txt):
